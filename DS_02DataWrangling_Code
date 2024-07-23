@@ -130,3 +130,16 @@ def save_file(data, filename, datapath):
 
 save_file(ski_data, 'ski_data_cleaned.csv', datapath)
 save_file(state_summary, 'state_summary.csv', datapath)
+
+2.13 SUMMARY
+Data Wrangling: Initially, the ski resort data was loaded and examined using the info() and head() methods to understand the structure and the first few entries. The data contained various numerical and categorical features about ski resorts, including pricing and facility details.
+
+Handling Missing Values and Outliers: Missing values were addressed by calculating the percentage of missing data for each column, identifying which columns had significant missing values (such as fastEight), and deciding on appropriate actions like dropping or filling these values based on the column's relevance to the analysis. Outliers were specifically handled for SkiableTerrain_ac, where an unrealistically high value was detected and corrected based on external validation.
+
+Exploratory Analysis: The analysis involved checking for duplicate names, exploring the distribution of resorts by region and state, and examining numeric distributions of features like SkiableTerrain_ac and SnowMaking_ac. Insights from this phase included understanding the most common regions for ski resorts and identifying features with little variance, indicating limited predictive power for modeling.
+
+Statewide Summary Creation: Aggregated state-level statistics were calculated using the groupby and agg functions to summarize total days open, terrain parks, skiable area, and night skiing area across resorts in each state. This helped in understanding the market size and distribution of facilities across states.
+
+Distribution Analysis: Histograms and bar plots were used to visualize the distribution of various features, revealing skewed distributions and potential influential factors for resort pricing strategies. This analysis was crucial in deciding how to handle these features in the modeling phase.
+
+Finalizing the Target Feature: The target feature for modeling, ticket pricing, was finalized by comparing weekday and weekend prices. Given the fewer missing values for weekend prices and the alignment of prices in Montana (the location of interest), it was decided to focus on weekend prices.
