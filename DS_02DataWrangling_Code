@@ -1,0 +1,132 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+# Load the ski resort data
+ski_data = pd.read_csv(r'C:\Users\jwhit\OneDrive\Documents\Data Science Course\ski_resort_data.csv')
+
+# Display a summary and the first few rows of the data
+ski_data.info()
+print(ski_data.head())
+
+# Check for missing values
+missing = pd.concat([ski_data.isnull().sum(), 100 * ski_data.isnull().mean()], axis=1)
+missing.columns=['count', '%']
+print(missing.sort_values(by='count', ascending=False))
+
+# Filter for the resort of interest
+print(ski_data[ski_data.Name == 'Big Mountain Resort'].T)
+
+# Check for duplicated resort names
+print(ski_data['Name'].value_counts().head())
+print((ski_data['Name'] + ', ' + ski_data['Region']).value_counts().head())
+print((ski_data['Name'] + ', ' + ski_data['state']).value_counts().head())
+
+# Check the number of distinct regions and states
+print(ski_data[['Region', 'state']].nunique())
+
+# Check the distribution of resorts by state
+fig, ax = plt.subplots(1, 2, figsize=(12, 8))
+ski_data.Region.value_counts().plot(kind='barh', ax=ax[0])
+ax[0].set_title('Region')
+ax[0].set_xlabel('Count')
+ski_data.state.value_counts().plot(kind='barh', ax=ax[1])
+ax[1].set_title('state')
+ax[1].set_xlabel('Count')
+plt.subplots_adjust(wspace=0.5)
+
+# Calculate average weekday and weekend price by state and sort by the average of the two
+state_price_means = ski_data.groupby('state')[['AdultWeekday', 'AdultWeekend']].mean()
+(state_price_means.reindex(index=state_price_means.mean(axis=1)
+    .sort_values(ascending=False)
+    .index)
+    .plot(kind='barh', figsize=(10, 10), title='Average ticket price by State'))
+plt.xlabel('Price ($)');
+
+# Melt the data for boxplot
+ticket_prices = pd.melt(ski_data[['state', 'AdultWeekday', 'AdultWeekend']], 
+                        id_vars='state', 
+                        var_name='Ticket', 
+                        value_vars=['AdultWeekday', 'AdultWeekend'], 
+                        value_name='Price')
+print(ticket_prices.head())
+
+# Create boxplot of the ticket price distributions for each ticket type for each state
+plt.subplots(figsize=(12, 8))
+sns.boxplot(x='state', y='Price', hue='Ticket', data=ticket_prices)
+plt.xticks(rotation='vertical')
+plt.ylabel('Price ($)')
+plt.xlabel('State')
+plt.show()
+
+# Distributions Of Feature Values
+ski_data.hist(figsize=(15, 10))
+plt.subplots_adjust(hspace=0.5);
+
+# Investigate SkiableTerrain_ac
+print(ski_data['SkiableTerrain_ac'][ski_data['SkiableTerrain_ac'] > 10000])
+print(ski_data[ski_data['SkiableTerrain_ac'] > 10000].T)
+
+# Correct the SkiableTerrain_ac value
+ski_data.loc[39, 'SkiableTerrain_ac']
+ski_data.loc[39, 'SkiableTerrain_ac'] = 1819
+ski_data.loc[39, 'SkiableTerrain_ac']
+
+# Re-plot the SkiableTerrain_ac distribution
+ski_data.SkiableTerrain_ac.hist(bins=30)
+plt.xlabel('SkiableTerrain_ac')
+plt.ylabel('Count')
+plt.title('Distribution of skiable area (acres) after replacing erroneous value');
+
+# Investigate Snow Making_ac
+print(ski_data['Snow Making_ac'][ski_data['Snow Making_ac'] > 1000])
+print(ski_data[ski_data['Snow Making_ac'] > 3000].T)
+
+# Drop fastEight column
+ski_data.drop(columns='fastEight', inplace=True)
+
+# Investigate yearsOpen
+print(ski_data['yearsOpen'][ski_data['yearsOpen'] > 100])
+ski_data[ski_data['yearsOpen'] < 1000]['yearsOpen'].hist(bins=30)
+plt.xlabel('Years open')
+plt.ylabel('Count')
+plt.title('Distribution of years open excluding 2019');
+
+# Load population data
+states_url = 'https://simple.wikipedia.org/w/index.php?title=List_of_U.S._states&oldid=7168473'
+usa_states = pd.read_html(states_url)[0]  # Correctly extracts the first dataframe
+print(usa_states.head())
+
+# Adjust state names in population data
+usa_states_sub = usa_states.iloc[:, [0, 5, 6]].copy()
+usa_states_sub.columns = ['state', 'state_population', 'state_area_sq_miles']
+usa_states_sub.state.replace(to_replace='\[.*\]', value='', regex=True, inplace=True)
+print(usa_states_sub.head())
+
+# Merge state summary data
+state_summary = ski_data.groupby('state').agg(
+    resorts_per_state=pd.NamedAgg(column='Name', aggfunc='size'),
+    state_total_skiable_area_ac=pd.NamedAgg(column='SkiableTerrain_ac', aggfunc='sum'),
+    state_total_days_open=pd.NamedAgg(column='daysOpenLastYear', aggfunc='sum'),
+    state_total_terrain_parks=pd.NamedAgg(column='TerrainParks', aggfunc='sum'),
+    state_total_nightskiing_ac=pd.NamedAgg(column='NightSkiing_ac', aggfunc='sum')
+).reset_index()
+state_summary = state_summary.merge(usa_states_sub, how='left', on='state')
+print(state_summary.head())
+
+# Drop rows with no price data
+missing_price = ski_data[['AdultWeekend', 'AdultWeekday']].isnull().sum(axis=1)
+ski_data = ski_data[missing_price != 2]
+
+# Save data
+datapath = 'C:/Users/jwhit/OneDrive/Documents/Data Science Course/data'
+if not os.path.exists(datapath):
+    os.makedirs(datapath)
+
+def save_file(data, filename, datapath):
+    filepath = os.path.join(datapath, filename)
+    data.to_csv(filepath, index=False)
+
+save_file(ski_data, 'ski_data_cleaned.csv', datapath)
+save_file(state_summary, 'state_summary.csv', datapath)
