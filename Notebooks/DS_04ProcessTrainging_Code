@@ -1,1 +1,347 @@
+# 4.3 Imports
+import pandas as pd
+import numpy as np
+import os
+import pickle as pkl
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import __version__ as sklearn_version
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import scale
+from sklearn.model_selection import train_test_split, cross_validate, GridSearchCV, learning_curve
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.dummy import DummyRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from sklearn.pipeline import make_pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.feature_selection import SelectKBest, f_regression
+import datetime
 
+# Load the data
+ski_data = pd.read_csv('C:/Users/jwhit/OneDrive/Documents/Data Science Course/data/ski_data_step3_features.csv')
+ski_data.head().T
+
+# Extract Big Mountain Data
+big_mountain = ski_data[ski_data.Name == 'Big Mountain Resort']
+ski_data = ski_data[ski_data.Name != 'Big Mountain Resort']
+
+# Train/Split Test
+X = ski_data.drop(columns='AdultWeekend')
+y = ski_data['AdultWeekend']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=47)
+
+# Save the 'Name', 'state', and 'Region' columns
+names_list = ['Name', 'state', 'Region']
+names_train = X_train[names_list]
+names_test = X_test[names_list]
+X_train.drop(columns=names_list, inplace=True)
+X_test.drop(columns=names_list, inplace=True)
+
+# Initial Not-Even-A-Model
+# Impute missing values in y_train with the mean of y_train
+y_train.fillna(y_train.mean(), inplace=True)
+y_test.fillna(y_test.mean(), inplace=True)
+
+# Initial Not-Even-A-Model
+train_mean = y_train.mean()
+train_mean
+
+# Calculate the mean of `y_train`
+train_mean = y_train.mean()
+
+# Fit the dummy regressor on the training data
+dumb_reg = DummyRegressor(strategy='mean')
+dumb_reg.fit(X_train, y_train)
+
+# Check the constant value
+dumb_reg.constant_
+
+# Metrics
+def r_squared(y, ypred):
+    ybar = np.sum(y) / len(y)
+    sum_sq_tot = np.sum((y - ybar)**2)
+    sum_sq_res = np.sum((y - ypred)**2)
+    R2 = 1.0 - sum_sq_res / sum_sq_tot
+    return R2
+
+y_tr_pred_ = train_mean * np.ones(len(y_train))
+y_tr_pred_[:5]
+y_tr_pred = dumb_reg.predict(X_train)
+y_tr_pred[:5]
+r_squared(y_train, y_tr_pred)
+y_te_pred = train_mean * np.ones(len(y_test))
+r_squared(y_test, y_te_pred)
+
+def mae(y, ypred):
+    abs_error = np.abs(y - ypred)
+    mae = np.mean(abs_error)
+    return mae
+
+mae(y_train, y_tr_pred)
+mae(y_test, y_te_pred)
+
+def mse(y, ypred):
+    sq_error = (y - ypred)**2
+    mse = np.mean(sq_error)
+    return mse
+
+mse(y_train, y_tr_pred)
+mse(y_test, y_te_pred)
+
+np.sqrt([mse(y_train, y_tr_pred), mse(y_test, y_te_pred)])
+
+# Calculate R^2, MAE, and MSE
+r2_train = r2_score(y_train, y_tr_pred)
+r2_test = r2_score(y_test, y_te_pred)
+mae_train = mean_absolute_error(y_train, y_tr_pred)
+mae_test = mean_absolute_error(y_test, y_te_pred)
+mse_train = mean_squared_error(y_train, y_tr_pred)
+mse_test = mean_squared_error(y_test, y_te_pred)
+
+# Initial Models
+X_defaults_median = X_train.median()
+X_defaults_median
+X_tr = X_train.fillna(X_defaults_median)
+X_te = X_test.fillna(X_defaults_median)
+
+scaler = StandardScaler()
+scaler.fit(X_tr)
+X_tr_scaled = scaler.transform(X_tr)
+X_te_scaled = scaler.transform(X_te)
+
+lm = LinearRegression().fit(X_tr_scaled, y_train)
+
+y_tr_pred = lm.predict(X_tr_scaled)
+y_te_pred = lm.predict(X_te_scaled)
+
+median_r2 = r2_score(y_train, y_tr_pred), r2_score(y_test, y_te_pred)
+median_r2
+
+median_mae = mean_absolute_error(y_train, y_tr_pred), mean_absolute_error(y_test, y_te_pred)
+median_mae
+
+
+median_mse = mean_squared_error(y_train, y_tr_pred), mean_squared_error(y_test, y_te_pred)
+median_mse
+
+X_defaults_mean = X_train.mean()
+X_defaults_mean
+X_tr = X_train.fillna(X_defaults_mean)
+X_te = X_test.fillna(X_defaults_mean)
+
+scaler = StandardScaler()
+scaler.fit(X_tr)
+X_tr_scaled = scaler.transform(X_tr)
+X_te_scaled = scaler.transform(X_te)
+
+lm = LinearRegression().fit(X_tr_scaled, y_train)
+
+y_tr_pred = lm.predict(X_tr_scaled)
+y_te_pred = lm.predict(X_te_scaled)
+
+r2_score(y_train, y_tr_pred), r2_score(y_test, y_te_pred)
+mean_absolute_error(y_train, y_tr_pred), mean_absolute_error(y_test, y_te_pred)
+mean_squared_error(y_train, y_tr_pred), mean_squared_error(y_test, y_te_pred)
+
+# Pipelines
+pipe = make_pipeline(
+    SimpleImputer(strategy='median'), 
+    StandardScaler(), 
+    LinearRegression()
+)
+
+pipe.fit(X_train, y_train)
+
+y_tr_pred = pipe.predict(X_train)
+y_te_pred = pipe.predict(X_test)
+
+r2_score(y_train, y_tr_pred), r2_score(y_test, y_te_pred)
+median_r2
+mean_absolute_error(y_train, y_tr_pred), mean_absolute_error(y_test, y_te_pred)
+median_mae
+mean_squared_error(y_train, y_tr_pred), mean_squared_error(y_test, y_te_pred)
+median_mse
+
+# Refining The Linear Model
+pipe = make_pipeline(
+    SimpleImputer(strategy='median'), 
+    StandardScaler(),
+    SelectKBest(f_regression),
+    LinearRegression()
+)
+
+pipe.fit(X_train, y_train)
+
+y_tr_pred = pipe.predict(X_train)
+y_te_pred = pipe.predict(X_test)
+r2_score(y_train, y_tr_pred), r2_score(y_test, y_te_pred)
+mean_absolute_error(y_train, y_tr_pred), mean_absolute_error(y_test, y_te_pred)
+
+pipe15 = make_pipeline(
+    SimpleImputer(strategy='median'), 
+    StandardScaler(),
+    SelectKBest(f_regression, k=15),
+    LinearRegression()
+)
+
+pipe15.fit(X_train, y_train)
+
+y_tr_pred = pipe15.predict(X_train)
+y_te_pred = pipe15.predict(X_test)
+r2_score(y_train, y_tr_pred), r2_score(y_test, y_te_pred)
+mean_absolute_error(y_train, y_tr_pred), mean_absolute_error(y_test, y_te_pred)
+
+cv_results = cross_validate(pipe15, X_train, y_train, cv=5)
+cv_scores = cv_results['test_score']
+cv_scores
+np.mean(cv_scores), np.std(cv_scores)
+np.round((np.mean(cv_scores) - 2 * np.std(cv_scores), np.mean(cv_scores) + 2 * np.std(cv_scores)), 2)
+
+pipe.get_params().keys()
+
+k = [k+1 for k in range(len(X_train.columns))]
+grid_params = {'selectkbest__k': k}
+
+lr_grid_cv = GridSearchCV(pipe, param_grid=grid_params, cv=5, n_jobs=-1)
+lr_grid_cv.fit(X_train, y_train)
+
+score_mean = lr_grid_cv.cv_results_['mean_test_score']
+score_std = lr_grid_cv.cv_results_['std_test_score']
+cv_k = [k for k in lr_grid_cv.cv_results_['param_selectkbest__k']]
+
+lr_grid_cv.best_params_
+
+best_k = lr_grid_cv.best_params_['selectkbest__k']
+plt.subplots(figsize=(10, 5))
+plt.errorbar(cv_k, score_mean, yerr=score_std)
+plt.axvline(x=best_k, c='r', ls='--', alpha=.5)
+plt.xlabel('k')
+plt.ylabel('CV score (r-squared)')
+plt.title('Pipeline mean CV score (error bars +/- 1sd)')
+plt.show()
+
+selected = lr_grid_cv.best_estimator_.named_steps.selectkbest.get_support()
+
+coefs = lr_grid_cv.best_estimator_.named_steps.linearregression.coef_
+features = X_train.columns[selected]
+pd.Series(coefs, index=features).sort_values(ascending=False)
+
+# Random Forest Model
+RF_pipe = make_pipeline(
+    SimpleImputer(strategy='median'),
+    StandardScaler(),
+    RandomForestRegressor(random_state=47)
+)
+
+rf_default_cv_results = cross_validate(RF_pipe, X_train, y_train, cv=5)
+rf_cv_scores = rf_default_cv_results['test_score']
+rf_cv_scores
+
+np.mean(rf_cv_scores), np.std(rf_cv_scores)
+
+n_est = [int(n) for n in np.logspace(start=1, stop=3, num=20)]
+grid_params = {
+        'randomforestregressor__n_estimators': n_est,
+        'standardscaler': [StandardScaler(), None],
+        'simpleimputer__strategy': ['mean', 'median']
+}
+
+rf_grid_cv = GridSearchCV(RF_pipe, param_grid=grid_params, cv=5, n_jobs=-1)
+rf_grid_cv.fit(X_train, y_train)
+
+rf_grid_cv.best_params_
+
+rf_best_cv_results = cross_validate(rf_grid_cv.best_estimator_, X_train, y_train, cv=5)
+rf_best_scores = rf_best_cv_results['test_score']
+rf_best_scores
+
+np.mean(rf_best_scores), np.std(rf_best_scores)
+
+plt.subplots(figsize=(10, 5))
+imps = rf_grid_cv.best_estimator_.named_steps.randomforestregressor.feature_importances_
+rf_feat_imps = pd.Series(imps, index=X_train.columns).sort_values(ascending=False)
+rf_feat_imps.plot(kind='bar')
+plt.xlabel('features')
+plt.ylabel('importance')
+plt.title('Best random forest regressor feature importances')
+plt.show()
+
+# Final Model Selection
+# Linear regression model performance
+lr_neg_mae = cross_validate(lr_grid_cv.best_estimator_, X_train, y_train, 
+                            scoring='neg_mean_absolute_error', cv=5, n_jobs=-1)
+lr_mae_mean = np.mean(-1 * lr_neg_mae['test_score'])
+lr_mae_std = np.std(-1 * lr_neg_mae['test_score'])
+lr_mae_mean, lr_mae_std
+
+mean_absolute_error(y_test, lr_grid_cv.best_estimator_.predict(X_test))
+
+# Random forest regression model performance
+rf_neg_mae = cross_validate(rf_grid_cv.best_estimator_, X_train, y_train, 
+                            scoring='neg_mean_absolute_error', cv=5, n_jobs=-1)
+rf_mae_mean = np.mean(-1 * rf_neg_mae['test_score'])
+rf_mae_std = np.std(-1 * rf_neg_mae['test_score'])
+rf_mae_mean, rf_mae_std
+
+mean_absolute_error(y_test, lr_grid_cv.best_estimator_.predict(X_test))
+
+# Random forest regression model performance
+rf_neg_mae = cross_validate(rf_grid_cv.best_estimator_, X_train, y_train, 
+                            scoring='neg_mean_absolute_error', cv=5, n_jobs=-1)
+rf_mae_mean = np.mean(-1 * rf_neg_mae['test_score'])
+rf_mae_std = np.std(-1 * rf_neg_mae['test_score'])
+rf_mae_mean, rf_mae_std
+
+mean_absolute_error(y_test, rf_grid_cv.best_estimator_.predict(X_test))
+
+fractions = [.2, .25, .3, .35, .4, .45, .5, .6, .75, .8, 1.0]
+train_size, train_scores, test_scores = learning_curve(pipe, X_train, y_train, train_sizes=fractions)
+train_scores_mean = np.mean(train_scores, axis=1)
+train_scores_std = np.std(train_scores, axis=1)
+test_scores_mean = np.mean(test_scores, axis=1)
+test_scores_std = np.std(test_scores, axis=1)
+plt.subplots(figsize=(10, 5))
+plt.errorbar(train_size, test_scores_mean, yerr=test_scores_std)
+plt.xlabel('Training set size')
+plt.ylabel('CV scores')
+plt.title('Cross-validation score as training set size increases')
+plt.show()
+
+best_model = rf_grid_cv.best_estimator_
+best_model.version = '1.0'
+best_model.pandas_version = pd.__version__
+best_model.numpy_version = np.__version__
+best_model.sklearn_version = sklearn_version
+best_model.X_columns = [col for col in X_train.columns]
+best_model.build_datetime = datetime.datetime.now()
+
+# Define save_file function
+def save_file(data, filename, datapath):
+    filepath = os.path.join(datapath, filename)
+    with open(filepath, 'wb') as file:
+        pickle.dump(data, file)
+
+# Save the model
+modelpath = 'C:/Users/jwhit/OneDrive/Documents/Data Science Course/data'
+if not os.path.exists(modelpath):
+    os.makedirs(modelpath)
+
+# Define the full path to the file
+model_file = os.path.join(modelpath, 'ski_resort_pricing_model.pkl')
+
+# Save the model to the file
+with open(model_file, 'wb') as file:
+    pickle.dump(best_model, file)
+
+# Verify the file was saved correctly
+print("Model saved to:", model_file)
+print("File exists:", os.path.exists(model_file))
+
+# Load the model
+with open(model_file, 'rb') as file:
+    best_model = pickle.load(file)
+
+# Now you can use best_model as needed
+print(best_model)
