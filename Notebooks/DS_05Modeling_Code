@@ -1,1 +1,217 @@
+# 5.3 Imports
+import pandas as pd
+import numpy as np
+import os
+import pickle
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import __version__ as sklearn_version
+from sklearn.model_selection import cross_validate
+
+# 5.4 Load Model
+expected_model_version = '1.0'
+model_path = r'C:\Users\jwhit\OneDrive\Documents\Data Science Course\data\ski_resort_pricing_model.pkl'
+if os.path.exists(model_path):
+    with open(model_path, 'rb') as f:
+        model = pickle.load(f)
+    if model.version != expected_model_version:
+        print("Expected model version doesn't match version loaded")
+    if model.sklearn_version != sklearn_version:
+        print("Warning: model created under different sklearn version")
+else:
+    print("Expected model not found")
+
+# 5.5 Load Data
+ski_data = pd.read_csv(r'C:\Users\jwhit\OneDrive\Documents\Data Science Course\data\ski_data_step3_features.csv')
+big_mountain = ski_data[ski_data.Name == 'Big Mountain Resort']
+big_mountain.T
+
+# 5.6 Fit the Model
+# Prepare X and Y
+X = ski_data.loc[ski_data.Name != "Big Mountain Resort", model.X_columns]
+y = ski_data.loc[ski_data.Name != "Big Mountain Resort", 'AdultWeekend']
+
+# Check for NaN values in y
+if y.isnull().any():
+    print(f"Found {y.isnull().sum()} NaN values in target variable. Removing these rows.")
+    X = X[~y.isnull()]
+    y = y.dropna()
+
+# Fit the model
+model.fit(X, y)
+
+cv_results = cross_validate(model, X, y, scoring='neg_mean_absolute_error', cv=5, n_jobs=-1)
+cv_results['test_score']
+
+# Calculate mean and standard deviation of MAE
+mae_mean, mae_std = np.mean(-1 * cv_results['test_score']), np.std(-1 * cv_results['test_score'])
+mae_mean, mae_std
+
+# Calculate mean and standard deviation of MAE
+mae_mean, mae_std = np.mean(-1 * cv_results['test_score']), np.std(-1 * cv_results['test_score'])
+mae_mean, mae_std
+
+# 5.7 Calculate Expected Big Mountain Ticket Price From The Model
+X_bm = ski_data.loc[ski_data.Name == "Big Mountain Resort", model.X_columns]
+y_bm = ski_data.loc[ski_data.Name == "Big Mountain Resort", 'AdultWeekend']
+
+bm_pred = model.predict(X_bm).item()
+
+y_bm = y_bm.values.item()
+
+print(f'Big Mountain Resort modelled price is ${bm_pred:.2f}, actual price is ${y_bm:.2f}.')
+print(f'Even with the expected mean absolute error of ${mae_mean:.2f}, this suggests there is room for an increase.')
+
+# 5.8 Big Mountain Resort In Market Context
+
+features = [
+    'vertical_drop',
+    'Snow Making_ac',
+    'total_chairs',
+    'fastQuads',
+    'Runs',
+    'LongestRun_mi',
+    'trams',
+    'SkiableTerrain_ac'
+]
+
+def plot_compare(feat_name, description, state=None, figsize=(10, 5)):
+    """Graphically compare distributions of features.
+    
+    Plot histogram of values for all resorts and reference line to mark
+    Big Mountain's position.
+    
+    Arguments:
+    feat_name - the feature column name in the data
+    description - text description of the feature
+    state - select a specific state (None for all states)
+    figsize - (optional) figure size
+    """
+    
+    plt.subplots(figsize=figsize)
+    # quirk that hist sometimes objects to NaNs, sometimes doesn't
+    # filtering only for finite values tidies this up
+    if state is None:
+        ski_x = ski_data[feat_name]
+    else:
+        ski_x = ski_data.loc[ski_data.state == state, feat_name]
+    ski_x = ski_x[np.isfinite(ski_x)]
+    plt.hist(ski_x, bins=30)
+    plt.axvline(x=big_mountain[feat_name].values, c='r', ls='--', alpha=0.8, label='Big Mountain')
+    plt.xlabel(description)
+    plt.ylabel('frequency')
+    plt.title(description + ' distribution for resorts in market share')
+    plt.legend()
+
+# 5.8.1 Ticket price
+plot_compare('AdultWeekend', 'Adult weekend ticket price ($)')
+plot_compare('AdultWeekend', 'Adult weekend ticket price ($) - Montana only', state='Montana')
+
+# 5.8.2 Vertical drop
+plot_compare('vertical_drop', 'Vertical drop (feet)')
+
+# 5.8.3 Snow making area
+plot_compare('Snow Making_ac', 'Area covered by snow makers (acres)')
+
+# 5.8.4 Total number of chairs
+plot_compare('total_chairs', 'Total number of chairs')
+
+# 5.8.5 Fast quads
+plot_compare('fastQuads', 'Number of fast quads')
+
+# 5.8.6 Runs
+plot_compare('Runs', 'Total number of runs')
+
+# 5.8.7 Longest run
+plot_compare('LongestRun_mi', 'Longest run length (miles)')
+
+# 5.8.8 Trams
+plot_compare('trams', 'Number of trams')
+
+# 5.8.9 Skiable terrain area
+plot_compare('SkiableTerrain_ac', 'Skiable terrain area (acres)')
+
+# 5.9 Modeling Scenarios
+
+expected_visitors = 350_000
+
+all_feats = ['vertical_drop', 'Snow Making_ac', 'total_chairs', 'fastQuads', 
+             'Runs', 'LongestRun_mi', 'trams', 'SkiableTerrain_ac']
+print(big_mountain[all_feats])
+
+# Code task 2: predict_increase function
+def predict_increase(features, deltas):
+    """Increase in modelled ticket price by applying delta to feature.
+    
+    Arguments:
+    features - list, names of the features in the ski_data dataframe to change
+    deltas - list, the amounts by which to increase the values of the features
+    
+    Outputs:
+    Amount of increase in the predicted ticket price
+    """
+    
+    bm2 = X_bm.copy()
+    for f, d in zip(features, deltas):
+        bm2[f] += d
+    return model.predict(bm2).item() - model.predict(X_bm).item()
+
+# 5.9.1 Scenario 1
+
+# Close up to 10 of the least used runs. The number of runs is the only parameter varying.
+
+[i for i in range(-1, -11, -1)]
+
+runs_delta = [i for i in range(-1, -11, -1)]
+price_deltas = [predict_increase(['Runs'], [delta]) for delta in runs_delta]
+
+price_deltas
+
+# Create two plots, side by side, for the predicted ticket price change (delta) for each
+# condition (number of runs closed) in the scenario and the associated predicted revenue
+# change on the assumption that each of the expected visitors buys 5 tickets
+# There are two things to do here:
+# 1 - use a list comprehension to create a list of the number of runs closed from `runs_delta`
+#2 - use a list comprehension to create a list of predicted revenue changes from `price_deltas`
+runs_closed = [-1 * delta for delta in runs_delta]  # 1
+fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+fig.subplots_adjust(wspace=0.5)
+ax[0].plot(runs_closed, price_deltas, 'o-')
+ax[0].set(xlabel='Runs closed', ylabel='Change ($)', title='Ticket price')
+revenue_deltas = [5 * expected_visitors * delta for delta in price_deltas]  # 2
+ax[1].plot(runs_closed, revenue_deltas, 'o-')
+ax[1].set(xlabel='Runs closed', ylabel='Change ($)', title='Revenue')
+plt.show()
+
+# 5.9.2 Scenario 2
+
+# Increase vertical drop by adding a run to a point 150 feet lower down and adding a chair lift
+
+# Call `predict_increase` with a list of the features 'Runs', 'vertical_drop', and 'total_chairs'
+# and associated deltas of 1, 150, and 1
+ticket2_increase = predict_increase(['Runs', 'vertical_drop', 'total_chairs'], [1, 150, 1])
+revenue2_increase = 5 * expected_visitors * ticket2_increase
+
+print(f'This scenario increases support for ticket price by ${ticket2_increase:.2f}')
+print(f'Over the season, this could be expected to amount to ${revenue2_increase:.0f}')
+
+# 5.9.3 Scenario 3
+
+# Increase vertical drop and add snow making coverage
+
+# Repeat scenario 2 conditions, but add an increase of 2 to `Snow Making_ac`
+ticket3_increase = predict_increase(['Runs', 'vertical_drop', 'total_chairs', 'Snow Making_ac'], [1, 150, 1, 2])
+revenue3_increase = 5 * expected_visitors * ticket3_increase
+
+print(f'This scenario increases support for ticket price by ${ticket3_increase:.2f}')
+print(f'Over the season, this could be expected to amount to ${revenue3_increase:.0f}')
+
+# 5.9.4 Scenario 4
+
+# Extend longest run and add snow making coverage
+
+# Predict the increase from adding 0.2 miles to `LongestRun_mi` and 4 to `Snow Making_ac`
+ticket4_increase = predict_increase(['LongestRun_mi', 'Snow Making_ac'], [0.2, 4])
+print(f'This scenario increases support for ticket price by ${ticket4_increase:.2f}')
+print(f'Over the season, this could be expected to amount to ${5 * expected_visitors * ticket4_increase:.0f}')
 
