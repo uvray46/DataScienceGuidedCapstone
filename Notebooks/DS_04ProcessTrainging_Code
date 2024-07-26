@@ -512,6 +512,8 @@ best_model.sklearn_version = sklearn_version
 best_model.X_columns = [col for col in X_train.columns]
 best_model.build_datetime = datetime.datetime.now()
 
+
+
 # Save the model
 modelpath = 'C:/Users/jwhit/OneDrive/Documents/Data Science Course/data'
 with open(os.path.join(modelpath, 'ski_resort_pricing_model.pkl'), 'wb') as file:
