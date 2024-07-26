@@ -518,3 +518,34 @@ best_model.build_datetime = datetime.datetime.now()
 modelpath = 'C:/Users/jwhit/OneDrive/Documents/Data Science Course/data'
 with open(os.path.join(modelpath, 'ski_resort_pricing_model.pkl'), 'wb') as file:
     pickle.dump(best_model, file)
+
+
+# 4.14 SUMMARY
+
+In this notebook, we focused on building and evaluating machine learning models to predict the adult weekend ticket prices for ski resorts. Here's a summary of our work:
+
+For performance, I started by calculating the mean of the training data (y_train) and used it as a baseline predictor. The DummyRegressor with the strategy 'mean' 
+was used to fit the model. 
+The performance of this baseline model was evaluated using R-squared, Mean Absolute Error (MAE), and Mean Squared Error (MSE) metrics. 
+This provided a baseline against which more complex models could be compared.
+
+Next, I built a simple linear regression model, imputed missing values using the median of the training data, and scaled the data using StandardScaler. 
+The linear regression model was trained and its performance was assessed on both the training and test sets. Observed that the model was likely overfitting due to 
+the high number of features used without any feature selection.
+
+To address potential overfitting, I introduced a feature selection step using SelectKBest with f_regression as the score function. 
+Experimented with selecting different numbers of features (k). The best value of k was found using GridSearchCV. 
+The refined linear model's performance was assessed using cross-validation and was compared to the performance on the test set. 
+This helped in selecting the most relevant features and improved the model's generalization.
+
+I then built a Random Forest Regressor model. A pipeline was defined with imputation, scaling, and the random forest regressor. 
+The default hyperparameters were used initially, and the performance was evaluated using cross-validation. 
+Further performed a hyperparameter search using GridSearchCV to optimize the parameters such as the number of estimators and imputation strategy. 
+The optimized random forest model's performance was then assessed using cross-validation and compared to the test set results.
+
+The performance of both the linear regression and random forest models was compared using the MAE from cross-validation and the test set. 
+The random forest model with optimized hyperparameters showed better generalization and performance consistency between cross-validation and the test set.
+
+Based on the evaluations, the random forest model was selected as the final model for predicting adult weekend ticket prices. 
+It demonstrated robust performance and generalization capabilities, making it a suitable choice for guiding business decisions related to ski resort pricing
+providing valuable insights for business decision-making.
