@@ -215,3 +215,86 @@ ticket4_increase = predict_increase(['LongestRun_mi', 'Snow Making_ac'], [0.2, 4
 print(f'This scenario increases support for ticket price by ${ticket4_increase:.2f}')
 print(f'Over the season, this could be expected to amount to ${5 * expected_visitors * ticket4_increase:.0f}')
 
+
+# 5.10 SUMMARY
+Current Position:
+Big Mountain Resort currently charges $81.00 for an adult weekend ticket.
+
+Modeling Insights:
+The model suggests that Big Mountain's facilities could support a higher ticket price of $90.82, which is approximately $9.82 more than the current price. 
+This suggests that there is room for an increase in ticket prices based on the resort's current offerings and market conditions.
+
+Approaching Leadership:
+To propose this change to business leadership, it would be essential to present the data-driven insights derived from our model. 
+We should highlight the gap between the current price and the model's suggested price.
+
+Operational Cost Considerations:
+When considering the additional operating cost of a new chair lift.
+If we distribute the cost of the new chair lift across these tickets, we can calculate the per-ticket cost increase needed to cover this additional expense.
+
+Recommended Scenarios for Further Consideration:
+Among the modeled scenarios, I would recommend further considering Scenario 2 and Scenario 3. These scenarios involved increasing the vertical drop, 
+adding a chair lift, and snow-making coverage, which significantly boosted the ticket price and seasonal revenue:
+
+Scenario 2: Increase the vertical drop by 150 feet and add a chair lift. This scenario showed a considerable increase in ticket price and revenue.
+Scenario 3: Similar to Scenario 2, but with an additional 2 acres of snow-making coverage, further enhancing ticket pricing and revenue potential.
+Both scenarios align with enhancing the resort's core offerings, likely to attract more visitors and justify higher ticket prices.
+
+Testing and Progressing with Run Closures:
+For the scenario involving closing runs, a cautious and data-driven approach is essential:
+
+Pilot Closure: Begin with a pilot closure of a few runs to monitor the impact on visitor satisfaction, ticket sales, and overall revenue. 
+                Gather feedback from visitors and staff during this period.
+Data Collection: Collect data on the usage of the remaining runs, visitor traffic patterns, and any operational savings from the closures.
+Impact Analysis: Analyze the data to understand the financial impact of the closures, considering both the cost savings and any potential revenue changes.
+Iterative Approach: Based on the analysis, gradually scale up the number of closures if the initial results are positive. 
+                    Continue to monitor and collect data at each stage.
+Communication Strategy: Communicate clearly with visitors about the reasons for the closures and any enhancements 
+                        being made to other areas of the resort to maintain overall satisfaction.
+
+# 5.11 FURTHER WORK
+
+Data Deficiencies:
+Several data limitations were identified during this analysis, which could be addressed in future work to enhance the model's accuracy and applicability:
+
+Operating Costs: Our dataset lacked comprehensive information on the operational costs associated with various facilities, such as chair lifts, 
+snow-making machines, and maintenance of runs. Having detailed cost data would allow for a more nuanced understanding of the financial implications of various scenarios.
+
+Visitor Data: Information on visitor demographics, preferences, and spending patterns was not available. Understanding visitor behavior and preferences could help
+in tailoring the resort's offerings more effectively.
+
+Competitive Landscape: Data on competitors' pricing strategies, visitor numbers, and facilities would provide context and help in benchmarking Big Mountain's performance 
+against its competitors.
+
+Seasonal Variations: Ticket prices and visitor numbers may vary seasonally. Including seasonal data could improve the model's ability to predict demand 
+and optimize pricing strategies accordingly.
+
+Additional Cost Information:
+Beyond the operating cost of the new chair lift, the following cost information would be useful:
+
+Maintenance Costs: Regular maintenance costs for all facilities, including lifts, snow-making machines, and other infrastructure.
+Labor Costs: Costs associated with staffing, including seasonal and full-time employees.
+Marketing Costs: Expenses related to marketing campaigns, promotions, and partnerships.
+Utility Costs: Costs for electricity, water, and other utilities required to run the resort.
+Capital Expenditure: Costs for new installations, upgrades, and expansions.
+Understanding the Price Mismatch:
+Big Mountain's modeled ticket price being higher than its current price might initially seem surprising. To understand this mismatch, the following steps could be taken:
+
+Competitive Analysis: Conduct a detailed analysis of competitor pricing to ensure Big Mountain's prices are competitive yet optimized for its offerings.
+Visitor Feedback: Gather feedback from visitors regarding their willingness to pay higher prices and perceived value of the resort's facilities.
+Historical Data: Analyze historical ticket prices and visitor numbers to identify trends and pricing elasticity.
+Business Use of the Model:
+Assuming the business leaders find the model useful, it could be utilized in several ways:
+
+Scenario Testing: The model can be used to test different scenarios and understand their financial implications. 
+                  This would help in making informed decisions about investments, pricing strategies, and facility upgrades.
+Strategic Planning: The model can inform strategic planning by identifying areas for improvement and potential revenue-generating opportunities.
+Performance Monitoring: Regularly using the model to compare predicted and actual ticket prices and revenues can help in monitoring performance 
+                        and making adjustments as needed.
+Making the Model Accessible:
+To avoid the need for continuous involvement from data scientists, the model can be made accessible to business analysts through the following means:
+
+Automated Tools: Develop a user-friendly interface or dashboard that allows business analysts to input different parameters and run the model independently. 
+                This could be a web-based application or integrated into the resort's existing management software.
+Documentation and Training: Provide comprehensive documentation and training sessions for business analysts to ensure they understand how to use the model effectively.
+API Integration: Integrate the model into the resort's existing data systems via an API, allowing for seamless data flow and real-time scenario analysis.
